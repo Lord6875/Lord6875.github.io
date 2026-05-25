@@ -1,0 +1,1899 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Fidati di Euclide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+  --orange: #FF6B1A;
+  --orange-light: #FF8C47;
+  --orange-dim: rgba(255, 107, 26, 0.15);
+  --orange-glow: rgba(255, 107, 26, 0.35);
+
+  /* Light mode */
+  --bg: #FAFAF8;
+  --bg-secondary: #F0EFE9;
+  --bg-card: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --text-primary: #1A1A18;
+  --text-secondary: #6B6B65;
+  --text-muted: #9B9B93;
+  --border: #E5E4DC;
+  --shadow: rgba(0,0,0,0.08);
+  --shadow-lg: rgba(0,0,0,0.14);
+  --msg-user-bg: #FF6B1A;
+  --msg-user-text: #FFFFFF;
+  --msg-ai-bg: #FFFFFF;
+  --msg-ai-text: #1A1A18;
+  --sidebar-bg: #F5F4EE;
+  --overlay: rgba(0,0,0,0.45);
+  --input-bar-bg: #FAFAF8;
+  --scrollbar: #D4D3CB;
+}
+
+[data-theme="dark"] {
+  --bg: #0F0F0D;
+  --bg-secondary: #1A1A16;
+  --bg-card: #1E1E1A;
+  --bg-input: #252520;
+  --text-primary: #F0EFE7;
+  --text-secondary: #9B9B8F;
+  --text-muted: #5A5A52;
+  --border: #2E2E28;
+  --shadow: rgba(0,0,0,0.4);
+  --shadow-lg: rgba(0,0,0,0.6);
+  --msg-user-bg: #FF6B1A;
+  --msg-user-text: #FFFFFF;
+  --msg-ai-bg: #1E1E1A;
+  --msg-ai-text: #F0EFE7;
+  --sidebar-bg: #141412;
+  --overlay: rgba(0,0,0,0.7);
+  --input-bar-bg: #0F0F0D;
+  --scrollbar: #2E2E28;
+}
+
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  height: 100%;
+  height: -webkit-fill-available;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.3s, color 0.3s;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
+
+/* ===== HEADER ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 100;
+  flex-shrink: 0;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--orange);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 2px 8px var(--orange-glow);
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text-primary);
+  line-height: 1;
+  transition: color 0.3s;
+}
+
+.logo-text span {
+  color: var(--orange);
+}
+
+.logo-subtitle {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  margin-top: 1px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== ICON BUTTONS ===== */
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 16px;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover { background: var(--border); color: var(--text-primary); }
+.icon-btn:active { transform: scale(0.92); }
+.icon-btn.active { background: var(--orange-dim); color: var(--orange); }
+
+/* ===== THEME TOGGLE ===== */
+.theme-toggle {
+  width: 52px;
+  height: 28px;
+  background: var(--bg-secondary);
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.3s, border-color 0.3s;
+  flex-shrink: 0;
+}
+
+.theme-toggle .knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--orange);
+  transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  box-shadow: 0 1px 4px var(--orange-glow);
+}
+
+[data-theme="dark"] .theme-toggle .knob {
+  transform: translateX(24px);
+}
+
+/* ===== MAIN LAYOUT ===== */
+.app-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 280px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  z-index: 200;
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1), background 0.3s, border-color 0.3s;
+  overflow: hidden;
+}
+
+.sidebar.open { transform: translateX(0); }
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: 199;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.sidebar-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sidebar-tabs {
+  display: flex;
+  padding: 8px;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sidebar-tab {
+  flex: 1;
+  padding: 7px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.sidebar-tab.active {
+  background: var(--orange);
+  color: white;
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+/* History items */
+.history-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  margin-bottom: 4px;
+}
+
+.history-item:hover {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+
+.history-item.active {
+  background: var(--orange-dim);
+  border-color: var(--orange);
+}
+
+.history-item-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.new-chat-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--orange);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 8px;
+  width: calc(100% - 16px);
+}
+
+.new-chat-btn:hover { background: var(--orange-light); }
+.new-chat-btn:active { transform: scale(0.97); }
+
+/* Archive items */
+.archive-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 6px;
+  background: var(--bg-card);
+}
+
+.archive-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.archive-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.archive-info { flex: 1; min-width: 0; }
+
+.archive-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.archive-date {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.empty-state .emoji { font-size: 32px; margin-bottom: 8px; display: block; }
+
+/* ===== MAIN CHAT AREA ===== */
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ===== OPTIONS BAR ===== */
+.options-bar {
+  padding: 8px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.options-bar::-webkit-scrollbar { display: none; }
+
+.option-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.option-group {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.opt-btn {
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.opt-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+.opt-btn.active {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: white;
+}
+
+.divider-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* ===== MESSAGES AREA ===== */
+.messages-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+
+/* ===== WELCOME SCREEN ===== */
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 24px 16px;
+  text-align: center;
+  gap: 12px;
+}
+
+.welcome-logo {
+  width: 72px;
+  height: 72px;
+  background: var(--orange);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  box-shadow: 0 8px 24px var(--orange-glow);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.welcome-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  color: var(--text-primary);
+}
+
+.welcome-title span { color: var(--orange); }
+
+.welcome-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.suggestion-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.chip {
+  padding: 8px 14px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: var(--orange-dim);
+}
+
+/* ===== MESSAGE BUBBLES ===== */
+.msg-row {
+  display: flex;
+  animation: msgIn 0.25s cubic-bezier(.34,1.56,.64,1) both;
+}
+
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.msg-row.user { justify-content: flex-end; }
+.msg-row.ai   { justify-content: flex-start; }
+
+.msg-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-right: 8px;
+  margin-top: 2px;
+  box-shadow: 0 2px 6px var(--orange-glow);
+}
+
+.msg-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  position: relative;
+  word-wrap: break-word;
+}
+
+.msg-row.user .msg-bubble {
+  background: var(--msg-user-bg);
+  color: var(--msg-user-text);
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px var(--orange-glow);
+}
+
+.msg-row.ai .msg-bubble {
+  background: var(--msg-ai-bg);
+  color: var(--msg-ai-text);
+  border-bottom-left-radius: 4px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.msg-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  padding: 0 2px;
+}
+
+.msg-row.user .msg-meta { text-align: right; }
+
+/* Math/code styling inside bubbles */
+.msg-bubble code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: rgba(255,107,26,0.12);
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: var(--orange);
+}
+
+.msg-bubble .math-block {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--orange);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 8px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  overflow-x: auto;
+}
+
+.msg-bubble strong { font-weight: 600; }
+
+.msg-bubble .hint-box {
+  background: var(--orange-dim);
+  border: 1px solid rgba(255,107,26,0.3);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 8px 0;
+}
+
+.msg-bubble .hint-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--orange);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.hint-counter {
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.hint-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.3s;
+}
+
+.hint-dot.used { background: var(--orange); }
+
+/* ===== TYPING INDICATOR ===== */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--msg-ai-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+  width: fit-content;
+}
+
+.typing-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--orange);
+  border-radius: 50%;
+  animation: typingBounce 1.2s infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* ===== IMAGE ATTACHMENT PREVIEW ===== */
+.msg-bubble .attachment-img {
+  width: 100%;
+  max-width: 200px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.msg-bubble .attachment-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.msg-bubble .attachment-file span.icon { font-size: 20px; }
+
+/* ===== INPUT BAR ===== */
+.input-bar-wrapper {
+  flex-shrink: 0;
+  background: var(--input-bar-bg);
+  border-top: 1px solid var(--border);
+  padding: 8px 12px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.attachment-preview-strip {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.attachment-preview-strip:empty { display: none; }
+.attachment-preview-strip::-webkit-scrollbar { display: none; }
+
+.att-preview {
+  position: relative;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.att-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.att-preview .remove-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 50%;
+  border: none;
+  color: white;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 8px;
+  transition: border-color 0.2s, background 0.3s;
+}
+
+.input-row:focus-within {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px var(--orange-dim);
+}
+
+.input-actions-left {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.input-action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background 0.2s, transform 0.15s;
+}
+
+.input-action-btn:hover { color: var(--orange); background: var(--orange-dim); }
+.input-action-btn:active { transform: scale(0.9); }
+
+.msg-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
+  resize: none;
+  outline: none;
+  min-height: 20px;
+  max-height: 120px;
+  line-height: 1.5;
+  align-self: center;
+  overflow-y: auto;
+}
+
+.msg-input::placeholder { color: var(--text-muted); }
+
+.send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  background: var(--orange);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: background 0.2s, transform 0.15s, opacity 0.2s;
+  box-shadow: 0 2px 8px var(--orange-glow);
+}
+
+.send-btn:hover { background: var(--orange-light); }
+.send-btn:active { transform: scale(0.9); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== MIC BUTTON RECORDING STATE ===== */
+.mic-btn.recording {
+  color: #EF4444;
+  background: rgba(239,68,68,0.12);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+}
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text-primary);
+  color: var(--bg);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ===== MODAL (API KEY) ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: 999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal {
+  background: var(--bg-card);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px max(20px, env(safe-area-inset-bottom));
+  width: 100%;
+  max-width: 500px;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(.4,0,.2,1);
+}
+
+.modal-overlay.open .modal {
+  transform: translateY(0);
+}
+
+.modal-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.modal-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.modal-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  outline: none;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+
+.modal-input:focus { border-color: var(--orange); }
+
+.modal-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  outline: none;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%239B9B93' d='M5 8l5 5 5-5H5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+.modal-select:focus { border-color: var(--orange); }
+
+.modal-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--orange);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modal-btn:hover { background: var(--orange-light); }
+
+.api-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.api-indicator.demo {
+  background: rgba(245,158,11,0.15);
+  color: #D97706;
+}
+
+.api-indicator.connected {
+  background: rgba(34,197,94,0.15);
+  color: #16A34A;
+}
+
+.api-indicator .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ===== ANSWER FORM ===== */
+.answer-form {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.answer-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.answer-input:focus { border-color: var(--orange); }
+
+.answer-btn {
+  padding: 8px 14px;
+  background: var(--orange);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.answer-btn:hover { background: var(--orange-light); }
+
+/* ===== RESPONSIVE ===== */
+@media (min-width: 600px) {
+  .messages-area { padding: 20px 40px; }
+  .msg-bubble { max-width: 70%; }
+  .sidebar { position: relative; transform: none; }
+  .sidebar-overlay { display: none; }
+  .app-layout { }
+}
+
+@media (min-width: 900px) {
+  .sidebar { width: 260px; transform: none; }
+  .messages-area { padding: 24px 60px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR OVERLAY ===== -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== API KEY MODAL ===== -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙️ Configurazione AI</div>
+    <div class="modal-desc">Inserisci la tua API Key per connettere Euclide a un motore AI reale. Senza key, Euclide usa risposte dimostrative.</div>
+    <input class="modal-input" id="apiKeyInput" type="password" placeholder="sk-ant-... oppure sk-...">
+    <select class="modal-select" id="apiProviderSelect">
+      <option value="anthropic">Anthropic (Claude)</option>
+      <option value="openai">OpenAI (GPT)</option>
+    </select>
+    <button class="modal-btn" onclick="saveApiKey()">💾 Salva e Connetti</button>
+  </div>
+</div>
+
+<!-- ===== HEADER ===== -->
+<header class="header">
+  <div class="header-left">
+    <button class="icon-btn" onclick="toggleSidebar()" title="Menu">☰</button>
+    <div>
+      <div class="logo-text">Fidati di <span>Euclide</span></div>
+      <div class="logo-subtitle">Assistente Olimpionico di Matematica & Fisica</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div id="apiStatusBadge" class="api-indicator demo"><span class="dot"></span> Demo</div>
+    <button class="icon-btn" onclick="openApiModal()" title="Impostazioni API">🔑</button>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Cambia tema">
+      <div class="knob" id="themeKnob">☀️</div>
+    </button>
+  </div>
+</header>
+
+<!-- ===== APP LAYOUT ===== -->
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">Menu</span>
+      <button class="icon-btn" onclick="closeSidebar()">✕</button>
+    </div>
+    <div class="sidebar-tabs">
+      <button class="sidebar-tab active" id="tabHistory" onclick="switchSidebarTab('history')">📜 Cronologia</button>
+      <button class="sidebar-tab" id="tabArchive" onclick="switchSidebarTab('archive')">🗂️ Archivio</button>
+    </div>
+    <div class="sidebar-content" id="sidebarContent">
+      <!-- Populated by JS -->
+    </div>
+    <button class="new-chat-btn" onclick="newChat()">✏️ Nuova Chat</button>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <main class="main-area">
+
+    <!-- OPTIONS BAR -->
+    <div class="options-bar">
+      <span class="option-label">Modalità</span>
+      <div class="option-group" id="modeGroup">
+        <button class="opt-btn active" data-mode="rapida" onclick="setMode('rapida')">⚡ Rapida</button>
+        <button class="opt-btn" data-mode="indizio" onclick="setMode('indizio')">💡 Indizio</button>
+        <button class="opt-btn" data-mode="verifica" onclick="setMode('verifica')">✅ Verifica</button>
+      </div>
+      <div class="divider-dot"></div>
+      <span class="option-label">Livello</span>
+      <div class="option-group" id="levelGroup">
+        <button class="opt-btn active" data-level="base" onclick="setLevel('base')">⭐</button>
+        <button class="opt-btn" data-level="medio" onclick="setLevel('medio')">⭐⭐</button>
+        <button class="opt-btn" data-level="avanzato" onclick="setLevel('avanzato')">⭐⭐⭐</button>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="messages-area" id="messagesArea">
+      <!-- Welcome screen shown when no messages -->
+      <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-logo">📐</div>
+        <div class="welcome-title">Ciao! Sono <span>Euclide</span> 👋</div>
+        <div class="welcome-subtitle">Il tuo tutor personale per matematica e fisica livello olimpiadi. Mandami un problema e lo risolviamo insieme!</div>
+        <div class="suggestion-chips">
+          <div class="chip" onclick="suggestMessage('Calcola l\'integrale di x·sin(x)dx')">∫ Calcola un integrale</div>
+          <div class="chip" onclick="suggestMessage('Dimostra che √2 è irrazionale')">🔢 Dimostrazione</div>
+          <div class="chip" onclick="suggestMessage('Un corpo di 2kg cade da 10m, trova la velocità finale')">⚡ Problema di fisica</div>
+          <div class="chip" onclick="suggestMessage('Risolvi il sistema: 3x + 2y = 7, x - y = 1')">📊 Sistema di equazioni</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INPUT BAR -->
+    <div class="input-bar-wrapper" id="inputBarWrapper">
+      <div class="attachment-preview-strip" id="attachmentPreview"></div>
+      <div class="input-row">
+        <div class="input-actions-left">
+          <!-- Hidden file inputs -->
+          <input type="file" id="imageInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageAttach(event)">
+          <input type="file" id="fileInput" accept=".pdf,.txt,.doc,.docx" style="display:none" onchange="handleFileAttach(event)">
+          <button class="input-action-btn" onclick="document.getElementById('imageInput').click()" title="Allega foto">📷</button>
+          <button class="input-action-btn" onclick="document.getElementById('fileInput').click()" title="Allega documento">📎</button>
+          <button class="input-action-btn mic-btn" id="micBtn" onpointerdown="startRecording()" onpointerup="stopRecording()" title="Messaggio vocale">🎙️</button>
+        </div>
+        <textarea
+          class="msg-input"
+          id="msgInput"
+          placeholder="Scrivi il tuo esercizio qui..."
+          rows="1"
+          onkeydown="handleInputKey(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Invia">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   FIDATI DI EUCLIDE — Complete Application JavaScript
+   ============================================================ */
+
+// ===== STATE =====
+let currentMode = 'rapida';        // rapida | indizio | verifica
+let currentLevel = 'base';         // base | medio | avanzato
+let pendingAttachments = [];       // Array di {type, name, dataUrl}
+let isRecording = false;
+let recordingTimer = null;
+let isTyping = false;
+let hintState = null;              // Track hint mode conversation state
+let currentConversationId = null;
+let conversations = {};            // { id: { title, messages, timestamp } }
+let archive = [];                  // Uploaded files/images archive
+
+let apiKey = localStorage.getItem('euclide_api_key') || '';
+let apiProvider = localStorage.getItem('euclide_api_provider') || 'anthropic';
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  // Load theme
+  const savedTheme = localStorage.getItem('euclide_theme') || 'light';
+  if (savedTheme === 'dark') applyTheme('dark');
+
+  // Load conversations & archive
+  const saved = localStorage.getItem('euclide_conversations');
+  if (saved) conversations = JSON.parse(saved);
+
+  const savedArchive = localStorage.getItem('euclide_archive');
+  if (savedArchive) archive = JSON.parse(savedArchive);
+
+  updateApiIndicator();
+  renderSidebar();
+
+  // iOS keyboard handling: use visualViewport to shift the input bar
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleViewportResize);
+    window.visualViewport.addEventListener('scroll', handleViewportResize);
+  }
+});
+
+// ===== VIEWPORT / KEYBOARD FIX =====
+function handleViewportResize() {
+  const inputBar = document.getElementById('inputBarWrapper');
+  const viewport = window.visualViewport;
+  const offsetFromBottom = window.innerHeight - viewport.height - viewport.offsetTop;
+  inputBar.style.paddingBottom = Math.max(offsetFromBottom, 0) + 'px';
+}
+
+// ===== THEME =====
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeKnob').textContent = theme === 'dark' ? '🌙' : '☀️';
+  localStorage.setItem('euclide_theme', theme);
+}
+
+// ===== SIDEBAR =====
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const isOpen = sidebar.classList.contains('open');
+  if (isOpen) {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('visible');
+  } else {
+    renderSidebar();
+    sidebar.classList.add('open');
+    overlay.classList.add('visible');
+  }
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('visible');
+}
+
+let currentSidebarTab = 'history';
+
+function switchSidebarTab(tab) {
+  currentSidebarTab = tab;
+  document.getElementById('tabHistory').classList.toggle('active', tab === 'history');
+  document.getElementById('tabArchive').classList.toggle('active', tab === 'archive');
+  renderSidebar();
+}
+
+function renderSidebar() {
+  const content = document.getElementById('sidebarContent');
+  if (currentSidebarTab === 'history') {
+    const convList = Object.entries(conversations).sort((a,b) => b[1].timestamp - a[1].timestamp);
+    if (!convList.length) {
+      content.innerHTML = `<div class="empty-state"><span class="emoji">💬</span>Nessuna conversazione ancora. Inizia a chattare!</div>`;
+      return;
+    }
+    content.innerHTML = convList.map(([id, conv]) => `
+      <div class="history-item ${id === currentConversationId ? 'active' : ''}" onclick="loadConversation('${id}')">
+        <div class="history-item-title">${escapeHtml(conv.title || 'Conversazione')}</div>
+        <div class="history-item-meta">${new Date(conv.timestamp).toLocaleDateString('it-IT', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}</div>
+      </div>
+    `).join('');
+  } else {
+    if (!archive.length) {
+      content.innerHTML = `<div class="empty-state"><span class="emoji">🗂️</span>Nessun file caricato ancora.</div>`;
+      return;
+    }
+    content.innerHTML = archive.map((item, i) => `
+      <div class="archive-item">
+        <div class="archive-thumb">
+          ${item.type === 'image' ? `<img src="${item.dataUrl}" alt="${escapeHtml(item.name)}">` : '📄'}
+        </div>
+        <div class="archive-info">
+          <div class="archive-name">${escapeHtml(item.name)}</div>
+          <div class="archive-date">${new Date(item.timestamp).toLocaleDateString('it-IT')}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+function loadConversation(id) {
+  closeSidebar();
+  currentConversationId = id;
+  const conv = conversations[id];
+  if (!conv) return;
+  hintState = null;
+
+  const area = document.getElementById('messagesArea');
+  area.innerHTML = '';
+
+  conv.messages.forEach(msg => renderMessage(msg));
+  scrollToBottom();
+}
+
+function newChat() {
+  closeSidebar();
+  currentConversationId = null;
+  hintState = null;
+  pendingAttachments = [];
+  document.getElementById('attachmentPreview').innerHTML = '';
+  const area = document.getElementById('messagesArea');
+  area.innerHTML = `
+    <div class="welcome-screen" id="welcomeScreen">
+      <div class="welcome-logo">📐</div>
+      <div class="welcome-title">Ciao! Sono <span>Euclide</span> 👋</div>
+      <div class="welcome-subtitle">Il tuo tutor personale per matematica e fisica livello olimpiadi. Mandami un problema e lo risolviamo insieme!</div>
+      <div class="suggestion-chips">
+        <div class="chip" onclick="suggestMessage('Calcola l\\'integrale di x·sin(x)dx')">∫ Calcola un integrale</div>
+        <div class="chip" onclick="suggestMessage('Dimostra che √2 è irrazionale')">🔢 Dimostrazione</div>
+        <div class="chip" onclick="suggestMessage('Un corpo di 2kg cade da 10m, trova la velocità finale')">⚡ Problema di fisica</div>
+        <div class="chip" onclick="suggestMessage('Risolvi il sistema: 3x + 2y = 7, x - y = 1')">📊 Sistema di equazioni</div>
+      </div>
+    </div>
+  `;
+}
+
+// ===== MODES & LEVELS =====
+function setMode(mode) {
+  currentMode = mode;
+  hintState = null;
+  document.querySelectorAll('#modeGroup .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+}
+
+function setLevel(level) {
+  currentLevel = level;
+  document.querySelectorAll('#levelGroup .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.level === level));
+}
+
+// ===== INPUT UTILS =====
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleInputKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function suggestMessage(text) {
+  const input = document.getElementById('msgInput');
+  input.value = text;
+  autoResize(input);
+  input.focus();
+}
+
+// ===== ATTACHMENTS =====
+function handleImageAttach(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const att = { type: 'image', name: file.name, dataUrl: ev.target.result };
+    pendingAttachments.push(att);
+    renderAttachmentPreview();
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function handleFileAttach(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const att = { type: 'file', name: file.name, dataUrl: ev.target.result };
+    pendingAttachments.push(att);
+    renderAttachmentPreview();
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function renderAttachmentPreview() {
+  const strip = document.getElementById('attachmentPreview');
+  strip.innerHTML = pendingAttachments.map((att, i) => `
+    <div class="att-preview">
+      ${att.type === 'image' ? `<img src="${att.dataUrl}" alt="${escapeHtml(att.name)}">` : '📄'}
+      <button class="remove-btn" onclick="removeAttachment(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeAttachment(i) {
+  pendingAttachments.splice(i, 1);
+  renderAttachmentPreview();
+}
+
+// ===== MIC / VOICE =====
+function startRecording() {
+  if (isRecording) return;
+  isRecording = true;
+  const btn = document.getElementById('micBtn');
+  btn.classList.add('recording');
+  btn.textContent = '⏹️';
+  showToast('🎙️ Registrazione in corso… rilascia per inviare');
+  // Simulate accumulating recording time
+  recordingTimer = Date.now();
+}
+
+function stopRecording() {
+  if (!isRecording) return;
+  isRecording = false;
+  const btn = document.getElementById('micBtn');
+  btn.classList.remove('recording');
+  btn.textContent = '🎙️';
+
+  const duration = Math.round((Date.now() - recordingTimer) / 1000);
+  if (duration < 1) { showToast('Registrazione troppo breve'); return; }
+
+  // Simulate a voice message by adding a text placeholder
+  const voiceText = `[Messaggio vocale - ${duration}s]`;
+  const input = document.getElementById('msgInput');
+  input.value = (input.value ? input.value + ' ' : '') + voiceText;
+  autoResize(input);
+  showToast(`✅ Messaggio vocale di ${duration}s acquisito`);
+}
+
+// ===== SEND MESSAGE =====
+async function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+
+  if (!text && pendingAttachments.length === 0) return;
+  if (isTyping) return;
+
+  // Remove welcome screen
+  const welcome = document.getElementById('welcomeScreen');
+  if (welcome) welcome.remove();
+
+  // Build user message object
+  const userMsg = {
+    role: 'user',
+    text: text,
+    attachments: [...pendingAttachments],
+    timestamp: Date.now()
+  };
+
+  // Archive new attachments
+  pendingAttachments.forEach(att => {
+    archive.push({ ...att, timestamp: Date.now() });
+  });
+  localStorage.setItem('euclide_archive', JSON.stringify(archive));
+
+  // Clear input
+  input.value = '';
+  input.style.height = 'auto';
+  pendingAttachments = [];
+  document.getElementById('attachmentPreview').innerHTML = '';
+
+  // Save to conversation
+  ensureConversation(userMsg);
+
+  // Render user message
+  renderMessage(userMsg);
+  scrollToBottom();
+
+  // Show typing indicator
+  showTyping();
+
+  // Get AI response
+  try {
+    let responseText;
+    if (apiKey) {
+      responseText = await callRealApi(buildConversationHistory(), currentMode, currentLevel);
+    } else {
+      await sleep(900 + Math.random() * 800);
+      responseText = simulateEuclideResponse(text, currentMode, currentLevel);
+    }
+
+    hideTyping();
+
+    const aiMsg = {
+      role: 'ai',
+      text: responseText,
+      mode: currentMode,
+      timestamp: Date.now(),
+      hintNum: (currentMode === 'indizio' && hintState) ? hintState.hintGiven : undefined,
+    };
+
+    // Update hint state
+    if (currentMode === 'indizio') {
+      if (!hintState) hintState = { hintGiven: 1, answered: false, problem: text };
+      else if (!hintState.answered) hintState.hintGiven = Math.min(hintState.hintGiven + 1, 3);
+    }
+
+    saveMessageToConversation(aiMsg);
+    renderMessage(aiMsg);
+    scrollToBottom();
+
+  } catch (err) {
+    hideTyping();
+    const errMsg = {
+      role: 'ai',
+      text: `Ops! 😅 C'è stato un problema nel connettermi all'AI. ${apiKey ? 'Controlla la tua API key nelle impostazioni.' : 'Usa la modalità demo oppure configura un\'API key.'}`,
+      timestamp: Date.now()
+    };
+    saveMessageToConversation(errMsg);
+    renderMessage(errMsg);
+    scrollToBottom();
+  }
+}
+
+function ensureConversation(firstMsg) {
+  if (!currentConversationId) {
+    currentConversationId = 'conv_' + Date.now();
+    const title = firstMsg.text ? firstMsg.text.slice(0, 40) : 'Conversazione';
+    conversations[currentConversationId] = {
+      title,
+      messages: [],
+      timestamp: Date.now()
+    };
+  }
+  conversations[currentConversationId].messages.push(firstMsg);
+  persistConversations();
+}
+
+function saveMessageToConversation(msg) {
+  if (!currentConversationId) return;
+  conversations[currentConversationId].messages.push(msg);
+  persistConversations();
+}
+
+function persistConversations() {
+  // Limit size: keep last 30 conversations, messages trimmed
+  const keys = Object.keys(conversations);
+  if (keys.length > 30) {
+    const sorted = keys.sort((a,b) => conversations[a].timestamp - conversations[b].timestamp);
+    delete conversations[sorted[0]];
+  }
+  localStorage.setItem('euclide_conversations', JSON.stringify(conversations));
+}
+
+function buildConversationHistory() {
+  if (!currentConversationId) return [];
+  return (conversations[currentConversationId]?.messages || []).map(m => ({
+    role: m.role === 'ai' ? 'assistant' : 'user',
+    content: m.text || ''
+  }));
+}
+
+// ===== RENDER MESSAGE =====
+function renderMessage(msg) {
+  const area = document.getElementById('messagesArea');
+  const row = document.createElement('div');
+  row.className = `msg-row ${msg.role}`;
+
+  const time = new Date(msg.timestamp).toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+
+  let attachmentsHtml = '';
+  if (msg.attachments && msg.attachments.length > 0) {
+    attachmentsHtml = msg.attachments.map(att =>
+      att.type === 'image'
+        ? `<img class="attachment-img" src="${att.dataUrl}" alt="${escapeHtml(att.name)}">`
+        : `<div class="attachment-file"><span class="icon">📄</span><span>${escapeHtml(att.name)}</span></div>`
+    ).join('');
+  }
+
+  const bubbleContent = formatMessageText(msg.text || '');
+
+  // Hint answer form
+  let answerForm = '';
+  if (msg.role === 'ai' && currentMode === 'indizio' && msg.hintNum !== undefined && msg.hintNum < 3) {
+    answerForm = `
+      <div class="answer-form">
+        <input class="answer-input" placeholder="La tua risposta..." id="answerInput_${msg.timestamp}">
+        <button class="answer-btn" onclick="submitAnswer(this, '${msg.timestamp}')">Invia ✈️</button>
+      </div>`;
+  }
+
+  if (msg.role === 'user') {
+    row.innerHTML = `
+      <div>
+        <div class="msg-bubble">${attachmentsHtml}${bubbleContent}${answerForm}</div>
+        <div class="msg-meta">${time}</div>
+      </div>`;
+  } else {
+    row.innerHTML = `
+      <div class="msg-avatar">📐</div>
+      <div>
+        <div class="msg-bubble">${attachmentsHtml}${bubbleContent}${answerForm}</div>
+        <div class="msg-meta">Euclide · ${time}</div>
+      </div>`;
+  }
+
+  area.appendChild(row);
+}
+
+function formatMessageText(text) {
+  if (!text) return '';
+  // Escape HTML first
+  let html = escapeHtml(text);
+  // Bold: **text**
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Inline code: `code`
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Math blocks: $$...$$
+  html = html.replace(/\$\$([\s\S]*?)\$\$/g, '<div class="math-block">$1</div>');
+  // Hint boxes: [INDIZIO N: ...]
+  html = html.replace(/\[INDIZIO (\d):([\s\S]*?)\]/g, (_, n, content) => {
+    const dots = [1,2,3].map(i => `<span class="hint-dot ${i <= parseInt(n) ? 'used' : ''}"></span>`).join('');
+    return `<div class="hint-box"><div class="hint-label">💡 Indizio ${n}/3</div><div class="hint-counter">${dots}</div>${content.trim()}</div>`;
+  });
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
+// ===== TYPING INDICATOR =====
+let typingRow = null;
+
+function showTyping() {
+  isTyping = true;
+  document.getElementById('sendBtn').disabled = true;
+  const area = document.getElementById('messagesArea');
+  typingRow = document.createElement('div');
+  typingRow.className = 'msg-row ai';
+  typingRow.id = 'typingRow';
+  typingRow.innerHTML = `
+    <div class="msg-avatar">📐</div>
+    <div class="typing-indicator">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>`;
+  area.appendChild(typingRow);
+  scrollToBottom();
+}
+
+function hideTyping() {
+  isTyping = false;
+  document.getElementById('sendBtn').disabled = false;
+  const tr = document.getElementById('typingRow');
+  if (tr) tr.remove();
+}
+
+// ===== HINT ANSWER SUBMIT =====
+function submitAnswer(btn, ts) {
+  const inputEl = document.getElementById(`answerInput_${ts}`);
+  const answer = inputEl?.value?.trim();
+  if (!answer) return;
+
+  btn.closest('.answer-form')?.remove();
+
+  const input = document.getElementById('msgInput');
+  input.value = `[Risposta alla verifica] ${answer}`;
+  sendMessage();
+}
+
+// ===== SCROLL =====
+function scrollToBottom() {
+  const area = document.getElementById('messagesArea');
+  setTimeout(() => area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' }), 50);
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ===== API KEY MODAL =====
+function openApiModal() {
+  document.getElementById('apiKeyInput').value = apiKey;
+  document.getElementById('apiProviderSelect').value = apiProvider;
+  document.getElementById('apiModal').classList.add('open');
+}
+
+function saveApiKey() {
+  apiKey = document.getElementById('apiKeyInput').value.trim();
+  apiProvider = document.getElementById('apiProviderSelect').value;
+  localStorage.setItem('euclide_api_key', apiKey);
+  localStorage.setItem('euclide_api_provider', apiProvider);
+  document.getElementById('apiModal').classList.remove('open');
+  updateApiIndicator();
+  showToast(apiKey ? '✅ API Key salvata!' : '⚠️ Modalità Demo attiva');
+}
+
+document.getElementById('apiModal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+function updateApiIndicator() {
+  const badge = document.getElementById('apiStatusBadge');
+  if (apiKey) {
+    badge.className = 'api-indicator connected';
+    badge.innerHTML = '<span class="dot"></span> Connesso';
+  } else {
+    badge.className = 'api-indicator demo';
+    badge.innerHTML = '<span class="dot"></span> Demo';
+  }
+}
+
+// ===== REAL API CALL =====
+/**
+ * callRealApi — connects to Anthropic or OpenAI
+ * @param {Array} history  - conversation history [{role, content}]
+ * @param {string} mode    - rapida | indizio | verifica
+ * @param {string} level   - base | medio | avanzato
+ */
+async function callRealApi(history, mode, level) {
+  const systemPrompt = buildSystemPrompt(mode, level);
+
+  if (apiProvider === 'anthropic') {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: history
+      })
+    });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.content?.[0]?.text || 'Nessuna risposta.';
+
+  } else {
+    // OpenAI
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        max_tokens: 1500,
+        messages: [{ role: 'system', content: systemPrompt }, ...history]
+      })
+    });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.choices?.[0]?.message?.content || 'Nessuna risposta.';
+  }
+}
+
+function buildSystemPrompt(mode, level) {
+  const levelDesc = { base: 'scuola superiore', medio: 'pre-olimpiadi', avanzato: 'olimpiadi internazionali' }[level];
+  const modeInstr = {
+    rapida: 'Risolvi il problema passo per passo, fornendo la soluzione completa e ben spiegata.',
+    indizio: 'NON dare la risposta completa subito. Dai un indizio alla volta usando il formato [INDIZIO N: testo]. Usa N=1,2,3 progressivamente. Aspetta che l\'utente risponda prima di dare l\'indizio successivo.',
+    verifica: 'L\'utente ti darà una risposta o soluzione. Tu devi SOLO dire se è corretta o sbagliata e perché, senza fornire la soluzione completa.'
+  }[mode];
+
+  return `Sei Euclide, un assistente AI esperto e simpatico specializzato in matematica e fisica a livello ${levelDesc}.
+Il tuo tono è: estremamente colloquiale, entusiasta, incoraggiante. Usi esclamazioni come "Ehi!", "Perfetto!", "Ottima intuizione!", "Attenzione però!" ecc.
+Usi la notazione matematica chiara, e quando scrivi espressioni matematiche importanti le metti in blocchi $$ ... $$.
+Puoi usare **grassetto** per termini chiave e \`codice inline\` per formule brevi.
+
+MODALITÀ ATTIVA: ${mode.toUpperCase()}
+${modeInstr}
+
+Rispondi sempre in italiano.`;
+}
+
+// ===== SIMULATED AI RESPONSES (Demo mode) =====
+/**
+ * simulateEuclideResponse — generates demo responses based on mode and level
+ * Replace this with callRealApi() when an API key is provided.
+ */
+function simulateEuclideResponse(userInput, mode, level) {
+  const input = userInput.toLowerCase();
+  const levelPhrases = {
+    base: ['Ottimo punto di partenza!', 'Perfetto per iniziare!', 'Bello, analizziamolo con calma!'],
+    medio: ['Bella sfida!', 'Questo richiede un po\' di ragionamento!', 'Interessante, mi piace!'],
+    avanzato: ['Eccellente problema olimpionico!', 'Questo richiede tecniche avanzate!', 'Una vera perla, questo!']
+  };
+
+  const intro = levelPhrases[level][Math.floor(Math.random() * 3)];
+
+  // Check for answer submission in indizio mode
+  if (userInput.includes('[Risposta alla verifica]')) {
+    const answer = userInput.replace('[Risposta alla verifica]', '').trim();
+    return `Vediamo la tua risposta: **"${answer}"**...\n\nHmm, ci sei **quasi**! 🎯 L'intuizione è giusta, ma controlla il segno nel passaggio centrale. Riprova, stai andando nella direzione giusta! 💪`;
+  }
+
+  if (mode === 'rapida') {
+    if (input.includes('integrale') || input.includes('∫')) {
+      return `${intro} Parliamo di integrali! 🚀\n\nPer calcolare **∫ x·sin(x) dx** usiamo l'integrazione per parti:\n\n$$∫ u·dv = u·v - ∫ v·du$$\n\nScelgo:\n- \`u = x\` → \`du = dx\`\n- \`dv = sin(x)dx\` → \`v = -cos(x)\`\n\nQuindi:\n$$∫ x·sin(x)dx = -x·cos(x) + ∫ cos(x)dx$$\n$$= -x·cos(x) + sin(x) + C$$\n\n**Risposta finale:** \`-x·cos(x) + sin(x) + C\` ✅\n\nSemplice no? L'integrazione per parti è una delle tecniche più potenti che esistono! 💫`;
+    }
+    if (input.includes('sistema') || input.includes('equazioni')) {
+      return `${intro} Sistema di equazioni, let's go! ⚡\n\nPer il sistema:\n$$3x + 2y = 7$$\n$$x - y = 1$$\n\nDalla seconda equazione: \`x = y + 1\`\n\nSostituiamo nella prima:\n$$3(y+1) + 2y = 7$$\n$$3y + 3 + 2y = 7$$\n$$5y = 4 → y = 4/5$$\n\nQuindi: \`x = y + 1 = 9/5\`\n\n**Soluzione:** \`x = 9/5, y = 4/5\` 🎉\n\nSempre verifica sostituendo nell'equazione originale — è un'abitudine che ti salverà alle olimpiadi!`;
+    }
+    if (input.includes('fisica') || input.includes('corpo') || input.includes('caduta') || input.includes('velocit')) {
+      return `${intro} Problema di cinematica classico! 🏋️\n\nDati:\n- \`m = 2 kg\`, \`h = 10 m\`, \`g = 9.8 m/s²\`\n\nUsiamo la conservazione dell'energia:\n$$mgh = \\frac{1}{2}mv²$$\n\nSemplificando la massa:\n$$v = \\sqrt{2gh} = \\sqrt{2 × 9.8 × 10}$$\n$$v = \\sqrt{196} ≈ 14 m/s$$\n\n**Risposta:** La velocità finale è circa **14 m/s** ✅\n\nNota: la massa non influisce! È uno dei risultati più belli della fisica classica 🌟`;
+    }
+    if (input.includes('irrazional') || input.includes('√2')) {
+      return `${intro} Dimostrare che √2 è irrazionale — un classico della logica matematica! 🔢\n\n**Dimostrazione per assurdo:**\n\nAssumiamo per assurdo che \`√2 = p/q\` con \`p, q ∈ ℤ\`, \`q ≠ 0\` e **la frazione sia ridotta ai minimi termini**.\n\nAllora: \`2 = p²/q²\` → \`p² = 2q²\`\n\nQuesto significa che **p² è pari** → anche **p è pari** → scriviamo \`p = 2k\`\n\nSostituendo: \`(2k)² = 2q²\` → \`4k² = 2q²\` → \`q² = 2k²\`\n\nQuindi anche **q è pari** — ma allora p e q hanno entrambi fattore 2, **contraddicendo** l'ipotesi che la frazione fosse ridotta ai minimi! ⚡\n\n**Conclusione:** √2 non può essere razionale. **QED** ✅\n\nQuesta tecnica (assurdo + parità) si usa moltissimo alle olimpiadi!`;
+    }
+    return `${intro} Interessante problema! 🤔\n\nHo analizzato la tua richiesta e ti posso dire che si tratta di un problema che richiede un approccio sistematico.\n\nEcco i passaggi chiave:\n1. **Analizza i dati** — identifica cosa sai e cosa cerchi\n2. **Scegli il metodo** — c'è sempre una via elegante!\n3. **Calcola con cura** — controlla ogni segno\n4. **Verifica** — sostituisci la soluzione nella condizione iniziale\n\n**Vuoi che risolva step-by-step il tuo problema specifico?** Assicurati di averlo scritto in modo completo così posso darti la soluzione esatta! 💪\n\n*(Modalità Demo attiva — aggiungi la tua API key per risposte precise)*`;
+  }
+
+  if (mode === 'indizio') {
+    const hintNum = hintState ? Math.min(hintState.hintGiven, 3) : 1;
+    const hints = [
+      `Ehi! Prima di tutto non ti do la soluzione — ci arriverai da solo! 😎\n\n[INDIZIO 1: Inizia **identificando il tipo di problema** e quali formule/teoremi potrebbero essere rilevanti. Guarda i dati: ci sono numeri speciali o relazioni particolari?]\n\nProva a ragionarci su e dimmi cosa pensi!`,
+      `Bene, stai progredendo! 💡\n\n[INDIZIO 2: Pensa alla **struttura matematica**: hai bisogno di sostituire, semplificare, o applicare un teorema noto? Spesso la chiave è riscrivere il problema in forma equivalente ma più semplice.]\n\nDai, sei sulla strada giusta!`,
+      `Quasi quasi... sei vicinissimo! 🔥\n\n[INDIZIO 3: L'**ultimo passo** è spesso il più semplice. Hai già tutto in mano — metti insieme i pezzi e controlla il risultato sostituendo nell'equazione originale.]\n\nScrivi la tua risposta finale, voglio vedere come te la cavi!`
+    ];
+    return hints[hintNum - 1] || hints[2];
+  }
+
+  if (mode === 'verifica') {
+    return `Ok, modalità **Verifica** attivata! 🕵️\n\nMandami la tua soluzione e io ti dico solo se è **corretta ✅** o **sbagliata ❌** — senza spoiler!\n\nRicorda: scrivi tutti i passaggi, non solo il risultato finale. Così posso dirti esattamente dove eventualmente hai sbagliato!`;
+  }
+
+  return `${intro} Dimmi pure il tuo problema, sono pronto! 📐`;
+}
+
+// ===== UTILS =====
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+</body>
+</html>
